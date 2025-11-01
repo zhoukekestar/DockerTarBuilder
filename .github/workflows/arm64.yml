@@ -28,6 +28,16 @@ jobs:
     - name: Compress the TAR files
       run: tar -czf arm64-images.tar.gz *-arm64.tar
 
+    - name: Upload to OSS
+      uses: modstart/github-oss-action@master
+      with:
+        key-id: ${{ secrets.OSS_KEY_ID }}
+        key-secret: ${{ secrets.OSS_KEY_SECRET }}
+        region: ${{ secrets.OSS_REGION }}
+        bucket: ${{ secrets.OSS_BUCKET }}
+        assets: |
+          arm64-images.tar.gz:/arm64-images.tar.gz
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
