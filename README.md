@@ -12,7 +12,10 @@
 # 加载
 
 ```sh
-$ unzip docker-images-tar.zip
-$ tar -zxvf ./x86-64-images.tar.gz
-$ docker load -i amd64_gcc-amd64.tar
+$ tar -zxvf ./arm64-images.tar.gz
+$ docker load -i xxx.tar
 ```
+
+# 管理删除
+
+* 为避免产生 oss 存储费用，下载完成后，记得在阿里云手机端删除相关文件
