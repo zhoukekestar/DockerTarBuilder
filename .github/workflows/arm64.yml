@@ -28,6 +28,31 @@ jobs:
       with:
         fetch-depth: 1
 
+    - name: Free Disk Space and Relocate Docker
+      run: |
+        # 1. 停止 Docker 服务
+        sudo systemctl stop docker
+        
+        # 2. 创建存放 Docker 数据的新目录（在那个 101G 的分区上）
+        sudo mkdir -p /home/runner/work/docker-data
+        
+        # 3. 迁移现有的 Docker 数据 (如果已经有部分数据的话)
+        # 注意：这一步如果数据量大可能会耗时，但为了确保一致性建议执行
+        # 或者直接清空旧目录：sudo rm -rf /var/lib/docker/*
+        sudo rsync -aP /var/lib/docker/ /home/runner/work/docker-data/
+        
+        # 4. 修改 Docker 配置文件，指向新位置
+        # 使用 tee 写入 daemon.json
+        echo '{
+          "data-root": "/home/runner/work/docker-data"
+        }' | sudo tee /etc/docker/daemon.json
+        
+        # 5. 重新启动 Docker
+        sudo systemctl start docker
+        
+        # 6. 验证 Docker 根目录已更改
+        docker info | grep "Docker Root Dir"
+        
     - name: Pull Docker Images and Package
       env:
         DOCKER_TMPDIR: /home/runner/work/tmp
