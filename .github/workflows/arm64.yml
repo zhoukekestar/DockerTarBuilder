@@ -13,7 +13,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
+    - name: easimon/maximize-build-space
+      uses: easimon/maximize-build-space@master
+      with:
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
@@ -22,12 +29,6 @@ jobs:
    
     - name: Pull Docker Images and Package
       run: |
-        sudo du -ah / | sort -rh | head -n 20
-
-        df -h
-        
-        sudo rm -rf /var/lib/docker/*
-
         df -h
         
         images="${{ github.event.inputs.docker_images }}"
