@@ -13,23 +13,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Maximize build space
-      uses: easimon/maximize-build-space@v10
-      with:
-        root-reserve-mb: 512
-        swap-size-mb: 1024
-        remove-dotnet: 'true'
-        remove-android: 'true'
-        remove-haskell: 'true'
-        remove-codeql: 'true'
-        remove-docker-images: 'true'
+
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         fetch-depth: 1
 
-    - name: Free Disk Space and Relocate Docker
+   
+    - name: Pull Docker Images and Package
       run: |
+        df -h
+        
         # 1. 停止 Docker 服务
         sudo systemctl stop docker
         
@@ -38,8 +32,9 @@ jobs:
         
         # 3. 迁移现有的 Docker 数据 (如果已经有部分数据的话)
         # 注意：这一步如果数据量大可能会耗时，但为了确保一致性建议执行
-        # 或者直接清空旧目录：sudo rm -rf /var/lib/docker/*
-        sudo rsync -aP /var/lib/docker/ /home/runner/work/docker-data/
+        # 或者直接清空旧目录：
+        sudo rm -rf /var/lib/docker/*
+        # sudo rsync -aP /var/lib/docker/ /home/runner/work/docker-data/
         
         # 4. 修改 Docker 配置文件，指向新位置
         # 使用 tee 写入 daemon.json
@@ -52,51 +47,8 @@ jobs:
         
         # 6. 验证 Docker 根目录已更改
         docker info | grep "Docker Root Dir"
-        
-    - name: Pull Docker Images and Package
-      env:
-        DOCKER_TMPDIR: /home/runner/work/tmp
-      run: |
-        # 6. 验证 Docker 根目录已更改
-        docker info | grep "Docker Root Dir"
-        
-        # 1. 停止 Docker
-        sudo systemctl stop docker
-        
-        # 2. 移动现有 Docker 目录到有空间的分区
-        # 注意：/home/runner/work 是你的 101G 分区
-        sudo mv /var/lib/docker /home/runner/work/docker
-        
-        # 3. 创建软链接，把原路径指向新路径
-        sudo ln -s /home/runner/work/docker /var/lib/docker
-        
-        # 4. 启动 Docker
-        sudo systemctl start docker
 
-
-         # 1. 停止 Docker 服务
-        sudo systemctl stop docker
-        
-        # 2. 创建存放 Docker 数据的新目录（在那个 101G 的分区上）
-        sudo mkdir -p /home/runner/work/docker-data
-        
-        # 3. 迁移现有的 Docker 数据 (如果已经有部分数据的话)
-        # 注意：这一步如果数据量大可能会耗时，但为了确保一致性建议执行
-        # 或者直接清空旧目录：sudo rm -rf /var/lib/docker/*
-        sudo rsync -aP /var/lib/docker/ /home/runner/work/docker-data/
-        
-        # 4. 修改 Docker 配置文件，指向新位置
-        # 使用 tee 写入 daemon.json
-        echo '{
-          "data-root": "/home/runner/work/docker-data"
-        }' | sudo tee /etc/docker/daemon.json
-        
-        # 5. 重新启动 Docker
-        sudo systemctl start docker
-        
-        # 6. 验证 Docker 根目录已更改
-        docker info | grep "Docker Root Dir"
-        
+        df -h
         
         images="${{ github.event.inputs.docker_images }}"
         IFS=',' read -r -a image_array <<< "$images"
