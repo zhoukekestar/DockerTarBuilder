@@ -22,6 +22,8 @@ jobs:
    
     - name: Pull Docker Images and Package
       run: |
+        sudo du -ah / | sort -rh | head -n 20
+
         df -h
         
         # 1. 停止 Docker 服务
