@@ -57,6 +57,19 @@ jobs:
       env:
         DOCKER_TMPDIR: /home/runner/work/tmp
       run: |
+        # 1. 停止 Docker
+        sudo systemctl stop docker
+        
+        # 2. 移动现有 Docker 目录到有空间的分区
+        # 注意：/home/runner/work 是你的 101G 分区
+        sudo mv /var/lib/docker /home/runner/work/docker
+        
+        # 3. 创建软链接，把原路径指向新路径
+        sudo ln -s /home/runner/work/docker /var/lib/docker
+        
+        # 4. 启动 Docker
+        sudo systemctl start docker
+        
         images="${{ github.event.inputs.docker_images }}"
         IFS=',' read -r -a image_array <<< "$images"
         for image in "${image_array[@]}"; do
